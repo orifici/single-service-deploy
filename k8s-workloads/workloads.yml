@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: miner
+  labels:
+    app: miner
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: miner
+  template:
+    metadata:
+      labels:
+        app: miner
+    spec:
+      containers:
+      - name: py-miner
+        image: docker.io/library/miner:v1.0
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-a
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+  selector:
+    app: miner
+  type: ClusterIP
+
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: routing-ingress
+  annotations:
+    kubernetes.io/ingress.class: addon-http-application-routing
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          serviceName: service-a
+          servicePort: 80
